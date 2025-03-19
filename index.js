@@ -56,22 +56,32 @@ const getRandomInt = (max) => String(Math.floor(Math.random() * max));
 
 app.post('/api/persons/', (req, res) => {
     const data = req.body;
-    console.log(data);
+
+    if(!data.name || !data.number){
+        return res.status(400).json({
+            error: 'malformed entry, missing content'
+        });
+    }
+
+    const dupe = phonebook.find((p) => p.name === data.name);
+    if(dupe) {
+        return res.status(400).json({
+            error: `an entry with the name '${dupe.name}' already exists`
+        });
+    }
 
     const person = {
         id: getRandomInt(9999),
         name: data.name,
         number: data.number,
     };
-
+    
     phonebook = phonebook.concat(person);
 
     res.json(person);
 });
 
-
 const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`Running on Port ${PORT}`);
 });
-

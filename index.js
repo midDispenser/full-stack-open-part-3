@@ -44,6 +44,13 @@ app.get('/info', (req, res) => {
     res.send(message);
 });
 
+app.delete('/api/persons/:id', (req, res) => {
+    const id = req.params.id;
+
+    phonebook = phonebook.filter((p) => p.id !== id);
+    res.status(204).end();
+});
+
 const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`Running on Port ${PORT}`);

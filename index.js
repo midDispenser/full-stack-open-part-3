@@ -1,9 +1,12 @@
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
-const logger = morgan('tiny');
 
 app.use(express.json());
+
+morgan.token('sentData', (req) => JSON.stringify(req.body));
+const logger = morgan(':method :url :status :res[content-length] - :response-time ms :sentData');
+
 app.use(logger);
 
 let phonebook = [
@@ -79,7 +82,7 @@ app.post('/api/persons/', (req, res) => {
         name: data.name,
         number: data.number,
     };
-    
+
     phonebook = phonebook.concat(person);
 
     res.json(person);

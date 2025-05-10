@@ -55,22 +55,28 @@ app.post('/api/persons/', (req, res) => {
         });
     }
 
-    const dupe = phonebook.find((p) => p.name === data.name);
-    if(dupe) {
-        return res.status(400).json({
-            error: `an entry with the name '${dupe.name}' already exists`
-        });
-    }
+    // const dupe = phonebook.find((p) => p.name === data.name);
+    // if(dupe) {
+    //     return res.status(400).json({
+    //         error: `an entry with the name '${dupe.name}' already exists`
+    //     });
+    // }
 
-    const person = {
-        id: getRandomInt(9999),
+    const person = new Contact ({
         name: data.name,
         number: data.number,
-    };
+    });
 
-    phonebook = phonebook.concat(person);
-
-    res.json(person);
+    person.save()
+        .then(result => {
+            res.json(result);
+        })
+        .catch(error => {
+            res.status(400).json({
+                error: 'an error ocurrer in the database!: ', error
+            });
+        });
+    
 });
 
 const PORT = process.env.PORT || 3001;

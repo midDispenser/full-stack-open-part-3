@@ -15,18 +15,22 @@ const logger = morgan(':method :url :status :res[content-length] - :response-tim
 app.use(logger);
 
 app.get('/api/persons', (req, res) => {
-    Contact.find({}).then(notes => {
-        res.json(notes);
-    })
+    Contact.find({})
+        .then(notes => {
+            res.json(notes);
+        })
+        .catch(error => next(error))
 });
 
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
     const id = req.params.id;
 
-    Contact.findById(id).then(contact => {
-        res.json(contact);
-    });
+    Contact.findById(id)
+        .then(contact => {
+            res.json(contact);
+        })
+        .catch(error => next(error))
 });
 
 app.get('/info', (req, res) => {
@@ -39,13 +43,8 @@ app.get('/info', (req, res) => {
 
 app.delete('/api/persons/:id', (req, res) => {
     Contact.findByIdAndDelete(req.params.id)
-        .then(result => {
-            res.status(204).end();
-        })
-        .catch(error => {
-            console.log(error);
-            res.status(500).end();
-        });
+        .then(result => res.status(204).end())
+        .catch(error => next(error))
 });
 
 const getRandomInt = (max) => String(Math.floor(Math.random() * max));
@@ -75,13 +74,20 @@ app.post('/api/persons/', (req, res) => {
         .then(result => {
             res.json(result);
         })
-        .catch(error => {
-            res.status(400).json({
-                error: 'an error ocurrer in the database!: ', error
-            });
-        });
-    
+        .catch(error => next(error));
 });
+
+const errorHandler = (error, req, res, next) => {
+    console.log(error.message);
+
+    if (error.name === 'CastError') {
+        return res.status(400).send({ error: 'malformatted id' });
+    }
+
+    next(error);
+}
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

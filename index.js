@@ -38,10 +38,14 @@ app.get('/info', (req, res) => {
 });
 
 app.delete('/api/persons/:id', (req, res) => {
-    const id = req.params.id;
-
-    phonebook = phonebook.filter((p) => p.id !== id);
-    res.status(204).end();
+    Contact.findByIdAndDelete(req.params.id)
+        .then(result => {
+            res.status(204).end();
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).end();
+        });
 });
 
 const getRandomInt = (max) => String(Math.floor(Math.random() * max));

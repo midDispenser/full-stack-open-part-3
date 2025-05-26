@@ -16,8 +16,8 @@ app.use(logger);
 
 app.get('/api/persons', (req, res) => {
     Contact.find({})
-        .then(notes => {
-            res.json(notes);
+        .then(contacts => {
+            res.json(contacts);
         })
         .catch(error => next(error))
 });
@@ -33,12 +33,19 @@ app.get('/api/persons/:id', (req, res, next) => {
         .catch(error => next(error))
 });
 
-app.get('/info', (req, res) => {
-    const message = `
-    <p>phonebook has info for ${phonebook?.length} people</p>\n
-    <p>${new Date(Date.now()).toString()}</p>`;
+app.get('/api/info/', (req, res) => {
+    let phonebookLength = 'unknown';
 
-    res.send(message);
+    Contact.find({})
+        .then(contacts => {
+            phonebookLength = contacts.length;
+            const message = `
+                <p>phonebook has info for ${phonebookLength} people</p>\n
+                <p>${new Date(Date.now()).toString()}</p>`;
+
+            res.send(message);
+        })
+        .catch(error => next(error))
 });
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -57,20 +64,36 @@ app.post('/api/persons/', (req, res) => {
             error: 'malformed entry, missing content'
         });
     }
-
-    // const dupe = phonebook.find((p) => p.name === data.name);
-    // if(dupe) {
-    //     return res.status(400).json({
-    //         error: `an entry with the name '${dupe.name}' already exists`
-    //     });
-    // }
-
+    
     const person = new Contact ({
         name: data.name,
         number: data.number,
     });
 
     person.save()
+        .then(result => {
+            res.json(result);
+        })
+        .catch(error => next(error));
+});
+
+app.put('/api/persons/:id', (req, res) => {
+    const id   = req.params.id;
+    const data = req.body;
+
+    if(!data.name || !data.number){
+        return res.status(400).json({
+            error: 'malformed entry, missing content'
+        });
+    }
+
+    const newPerson = new Contact ({
+        id:     id,
+        name:   data.name,
+        number: data.number,
+    });
+
+    newPerson.save()
         .then(result => {
             res.json(result);
         })

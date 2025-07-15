@@ -19,7 +19,7 @@ app.get('/api/persons', (req, res) => {
         .then(contacts => {
             res.json(contacts);
         })
-        .catch(error => next(error))
+        .catch(error => next(error));
 });
 
 
@@ -30,7 +30,7 @@ app.get('/api/persons/:id', (req, res, next) => {
         .then(contact => {
             res.json(contact);
         })
-        .catch(error => next(error))
+        .catch(error => next(error));
 });
 
 app.get('/api/info/', (req, res) => {
@@ -45,18 +45,18 @@ app.get('/api/info/', (req, res) => {
 
             res.send(message);
         })
-        .catch(error => next(error))
+        .catch(error => next(error));
 });
 
 app.delete('/api/persons/:id', (req, res) => {
     Contact.findByIdAndDelete(req.params.id)
         .then(result => res.status(204).end())
-        .catch(error => next(error))
+        .catch(error => next(error));
 });
 
 const getRandomInt = (max) => String(Math.floor(Math.random() * max));
 
-app.post('/api/persons/', (req, res) => {
+app.post('/api/persons/', (req, res, next) => {
     const data = req.body;
 
     if(!data.name || !data.number){
@@ -74,10 +74,15 @@ app.post('/api/persons/', (req, res) => {
         .then(result => {
             res.json(result);
         })
-        .catch(error => next(error));
+        .catch(error => {
+            // console.log(error);
+            // console.log(error.errors.name.properties);
+
+            next(error);
+        });
 });
 
-app.put('/api/persons/:id', (req, res) => {
+app.put('/api/persons/:id', (req, res, next) => {
     const id   = req.params.id;
     const data = req.body;
 
@@ -101,14 +106,19 @@ app.put('/api/persons/:id', (req, res) => {
 });
 
 const errorHandler = (error, req, res, next) => {
-    console.log(error.message);
-
     if (error.name === 'CastError') {
         return res.status(400).send({ error: 'malformatted id' });
     }
+    if (error.name === 'ValidationError' && error?.errors?.name?.kind === 'minlength') {
+        return res.status(400).send({ error: `the name '${error.errors.name.properties.value}' is shorter than the minimum allowed length of ${error.errors.name.properties.minlength})` });
+    }
+
+    if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message });
+    }
 
     next(error);
-}
+};
 
 app.use(errorHandler);
 
